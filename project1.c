@@ -27,6 +27,7 @@ vec4 colors[432];
 //2*72 for the top part of the cone = 144
 //144 triangles * 3 vertices per triangle = 432
 int num_vertices = 432;
+int vertexCount = 0;
 
 float degrees = 0;
 
@@ -137,6 +138,35 @@ void genVertices()
   }
 }
 
+void genSphere()
+{
+  for(int phiDeg = -90; phiDeg <= 90; phiDeg+=5)
+  {
+    for(int thetaDeg = 0; thetaDeg<=360; thetaDeg+=10)
+    {
+      float theta = thetaDeg*CONVERT_TO_RADIANS;
+      float phi = phiDeg*CONVERT_TO_RADIANS;
+      float nextPhi = (phiDeg + 5) * CONVERT_TO_RADIANS;
+
+      vertices[vertexCount].x = sin(phi)*cos(theta);
+      vertices[vertexCount].y = cos(phi)*cos(theta);
+      vertices[vertexCount].z = sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = sin(nextPhi*CONVERT_TO_RADIANS)*cos(theta*CONVERT_TO_RADIANS);
+      vertices[vertexCount].y = sin(nextPhi)*sin(theta);
+      vertices[vertexCount].z = sin(nextPhi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      }
+    }
+  printf("NumVertices: %d\n", vertexCount);
+}
+
 void genColors()
 {
   for(int i=0; i<num_vertices; i++)
@@ -181,7 +211,7 @@ void motion(int x, int y)
     glx = ((glx/256)-1);
     gly = -((gly/256)-1);
 
-    vec4 v = {glx, gly, (float)sqrt(1 - pow(glx, 2) - pow(gly, 2)), 0};
+    vec4 v = {glx, gly, 0, 0};
 
     v = vec4_norm(v);
     float d = pow(pow(v.y, 2) + pow(v.z, 2), 0.5);
@@ -215,7 +245,8 @@ void idle()
 
 int main(int argc, char **argv)
 {
-    genVertices();
+    //genVertices();
+    genSphere();
     genColors();
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
