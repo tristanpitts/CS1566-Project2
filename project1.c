@@ -20,13 +20,13 @@
 void genVertices();
 void genColors();
 
-vec4 vertices[950];
-vec4 colors[950];
+vec4 vertices[2109];
+vec4 colors[2109];
 
 //1 triangle every 5 degrees makes a smooth looking circle = 360/5 triangles = 72 triangles
 //2*72 for the top part of the cone = 144
 //144 triangles * 3 vertices per triangle = 432
-int num_vertices = 950;
+int num_vertices = 2109;
 int vertexCount = 0;
 
 float degrees = 0;
@@ -140,11 +140,11 @@ void genVertices()
 
 void genSphere()
 {
-  for(float phiDeg = 0; phiDeg <= 180; phiDeg+=20)
+  for(float phiDeg = -90; phiDeg <= 90; phiDeg+=10)
   {
     float phi = phiDeg*CONVERT_TO_RADIANS;
     float nextPhi = (phiDeg + 10) * CONVERT_TO_RADIANS;
-    for(float thetaDeg=0; thetaDeg<=360; thetaDeg+=20)
+    for(float thetaDeg=0; thetaDeg<=360; thetaDeg+=10)
     {
       float theta = thetaDeg*CONVERT_TO_RADIANS;
       float nextTheta = (thetaDeg+20)*CONVERT_TO_RADIANS;
@@ -156,38 +156,19 @@ void genSphere()
 
       vertexCount++;
 
-      vertices[vertexCount].x = sin(nextPhi)*cos(theta);
-      vertices[vertexCount].y = sin(nextPhi)*sin(theta);
+      vertices[vertexCount].x = cos(nextPhi)*cos(theta);
+      vertices[vertexCount].y = cos(nextPhi)*sin(theta);
       vertices[vertexCount].z = sin(nextPhi);
       vertices[vertexCount].w = 1;
 
       vertexCount++;
 
-      vertices[vertexCount].x = sin(nextPhi)*cos(nextTheta);
-      vertices[vertexCount].y = sin(nextPhi)*sin(nextTheta);
-      vertices[vertexCount].z = sin(nextPhi);
-      vertices[vertexCount].w = 1;
-
-      vertexCount++;
-
-      vertices[vertexCount].x = cos(phi)*cos(theta);
-      vertices[vertexCount].y = cos(phi)*sin(theta);
+      vertices[vertexCount].x = cos(phi)*cos(nextTheta);
+      vertices[vertexCount].y = cos(phi)*sin(nextTheta);
       vertices[vertexCount].z = sin(phi);
       vertices[vertexCount].w = 1;
 
       vertexCount++;
-
-      vertices[vertexCount].x = sin(nextPhi)*cos(nextTheta);
-      vertices[vertexCount].y = sin(nextPhi)*sin(nextTheta);
-      vertices[vertexCount].z = sin(nextPhi);
-      vertices[vertexCount].w = 1;
-
-      vertexCount++;
-
-      vertices[vertexCount].x = sin(phi)*cos(nextTheta);
-      vertices[vertexCount].y = sin(phi)*sin(nextTheta);
-      vertices[vertexCount].z = sin(phi);
-      vertices[vertexCount].w = 1;
 
       }
     }
