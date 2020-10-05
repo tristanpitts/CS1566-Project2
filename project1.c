@@ -20,13 +20,13 @@
 void genVertices();
 void genColors();
 
-vec4 vertices[2109];
-vec4 colors[2109];
+vec4 vertices[3888];
+vec4 colors[3888];
 
 //1 triangle every 5 degrees makes a smooth looking circle = 360/5 triangles = 72 triangles
 //2*72 for the top part of the cone = 144
 //144 triangles * 3 vertices per triangle = 432
-int num_vertices = 2109;
+int num_vertices = 3888;
 int vertexCount = 0;
 
 float degrees = 0;
@@ -34,6 +34,7 @@ float degrees = 0;
 GLuint ctm_location;
 mat4 ctm = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
 mat4 currentScale = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
+mat4 rot = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
 
 float scalingFactor = 1.0;
 
@@ -88,70 +89,20 @@ void reshape(int width, int height)
     glViewport(0, 0, 512, 512);
 }
 
-void genVertices()
-{
-  //make bottom circle
-  //get circle working first
-  int j = 0;
-  for(int i=0; i<360; i+=360/72)
-  {
-    vertices[j].x = 0.0;
-    vertices[j].z = 0.0;
-    vertices[j].y = 0.0;
-    vertices[j].w = 1.0;
-
-    j++;
-
-    vertices[j].x = cos(i*CONVERT_TO_RADIANS);
-    vertices[j].z = sin(i*CONVERT_TO_RADIANS);
-    vertices[j].y = 0.0;
-    vertices[j].w = 1.0;
-
-    j++;
-
-    vertices[j].x = cos((i+(360/72))*CONVERT_TO_RADIANS);
-    vertices[j].z = sin((i+(360/72))*CONVERT_TO_RADIANS);
-    vertices[j].y = 0.0;
-    vertices[j].w = 1.0;
-
-    j++;
-  }
-  //make top part
-  int i=0;
-  for(; j<num_vertices; j++)
-  {
-    if(vertices[i].x == 0 && vertices[i].y == 0 && vertices[i].z == 0)
-    {
-      vertices[j].x = 0.0;
-      vertices[j].y = 1.0;
-      vertices[j].z = 0.0;
-      vertices[j].w = 1.0;
-    }
-    else
-    {
-      vertices[j].x = vertices[i].x;
-      vertices[j].y = vertices[i].y;
-      vertices[j].z = vertices[i].z;
-      vertices[j].w = 1.0;
-    }
-    i++;
-  }
-}
-
 void genSphere()
 {
-  for(float phiDeg = -90; phiDeg <= 90; phiDeg+=10)
+  for(float phiDeg = -90; phiDeg < 90; phiDeg+=10)
   {
     float phi = phiDeg*CONVERT_TO_RADIANS;
     float nextPhi = (phiDeg + 10) * CONVERT_TO_RADIANS;
-    for(float thetaDeg=0; thetaDeg<=360; thetaDeg+=10)
+    for(float thetaDeg=0; thetaDeg<360; thetaDeg+=10)
     {
       float theta = thetaDeg*CONVERT_TO_RADIANS;
-      float nextTheta = (thetaDeg+20)*CONVERT_TO_RADIANS;
+      float nextTheta = (thetaDeg+10)*CONVERT_TO_RADIANS;
 
-      vertices[vertexCount].x = cos(phi)*cos(theta);
-      vertices[vertexCount].y = cos(phi)*sin(theta);
-      vertices[vertexCount].z = sin(phi);
+      vertices[vertexCount].x = cos(nextPhi)*cos(nextTheta);
+      vertices[vertexCount].y = cos(nextPhi)*sin(nextTheta);
+      vertices[vertexCount].z = sin(nextPhi);
       vertices[vertexCount].w = 1;
 
       vertexCount++;
@@ -163,9 +114,30 @@ void genSphere()
 
       vertexCount++;
 
+      vertices[vertexCount].x = cos(phi)*cos(theta);
+      vertices[vertexCount].y = cos(phi)*sin(theta);
+      vertices[vertexCount].z = sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = cos(phi)*cos(theta);
+      vertices[vertexCount].y = cos(phi)*sin(theta);
+      vertices[vertexCount].z = sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
       vertices[vertexCount].x = cos(phi)*cos(nextTheta);
       vertices[vertexCount].y = cos(phi)*sin(nextTheta);
       vertices[vertexCount].z = sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = cos(nextPhi)*cos(nextTheta);
+      vertices[vertexCount].y = cos(nextPhi)*sin(nextTheta);
+      vertices[vertexCount].z = sin(nextPhi);
       vertices[vertexCount].w = 1;
 
       vertexCount++;
@@ -182,7 +154,7 @@ void genColors()
     colors[i].x = (double)rand() / RAND_MAX;
     colors[i].y = (double)rand() / RAND_MAX;
     colors[i].z = (double)rand() / RAND_MAX;
-    colors[i].w = 1.0;
+    colors[i].w = 1;
   }
 }
 
@@ -200,13 +172,13 @@ void mouse(int button, int state, int x, int y)
   {
     scalingFactor *= 1.2;
     currentScale = mat4_scale(scalingFactor, scalingFactor, scalingFactor);
-    ctm = mat4_scale(scalingFactor, scalingFactor, scalingFactor);
+    ctm = mat4_mult(mat4_scale(scalingFactor, scalingFactor, scalingFactor), rot);
   }
   else if(button == 4)
   {
     scalingFactor /= 1.2;
     currentScale = mat4_scale(scalingFactor, scalingFactor, scalingFactor);
-    ctm = mat4_scale(scalingFactor, scalingFactor, scalingFactor);
+    ctm = mat4_mult(mat4_scale(scalingFactor, scalingFactor, scalingFactor), rot);
   }
   glutPostRedisplay();
 }
@@ -216,11 +188,13 @@ void motion(int x, int y)
   float glx = x;
   float gly = y;
 
-    glx = ((glx/256)-1);
-    gly = -((gly/256)-1);
+  glx = ((glx/256)-1);
+  gly = -((gly/256)-1);
 
-    vec4 v = {glx, gly, 0, 0};
+  vec4 v = {-gly, glx, 1-pow(gly,2)-pow(glx,2), 0};
 
+  if(v.z > 0)
+  {
     v = vec4_norm(v);
     float d = pow(pow(v.y, 2) + pow(v.z, 2), 0.5);
     float sintx = v.y/d;
@@ -239,9 +213,9 @@ void motion(int x, int y)
     mat4 M1 = mat4_mult(rynegativety, rxtx);
     mat4 M2 = mat4_mult(mat4_rotate_z(45*CONVERT_TO_RADIANS), M1);
     mat4 M3 = mat4_mult(ryty, M2);
-    mat4 R = mat4_mult(rxnegativetx, M3);
-    ctm = mat4_mult(R, currentScale);
-
+    rot = mat4_mult(rxnegativetx, M3);
+    ctm = mat4_mult(rot, currentScale);
+  }
 
   glutPostRedisplay();
 }
@@ -253,7 +227,6 @@ void idle()
 
 int main(int argc, char **argv)
 {
-    //genVertices();
     genSphere();
     genColors();
     glutInit(&argc, argv);
