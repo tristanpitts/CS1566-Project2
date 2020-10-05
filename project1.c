@@ -20,13 +20,13 @@
 void genVertices();
 void genColors();
 
-vec4 vertices[432];
-vec4 colors[432];
+vec4 vertices[950];
+vec4 colors[950];
 
 //1 triangle every 5 degrees makes a smooth looking circle = 360/5 triangles = 72 triangles
 //2*72 for the top part of the cone = 144
 //144 triangles * 3 vertices per triangle = 432
-int num_vertices = 432;
+int num_vertices = 950;
 int vertexCount = 0;
 
 float degrees = 0;
@@ -140,31 +140,58 @@ void genVertices()
 
 void genSphere()
 {
-  for(int phiDeg = -90; phiDeg <= 90; phiDeg+=5)
+  for(float phiDeg = 0; phiDeg <= 180; phiDeg+=20)
   {
-    for(int thetaDeg = 0; thetaDeg<=360; thetaDeg+=10)
+    float phi = phiDeg*CONVERT_TO_RADIANS;
+    float nextPhi = (phiDeg + 10) * CONVERT_TO_RADIANS;
+    for(float thetaDeg=0; thetaDeg<=360; thetaDeg+=20)
     {
       float theta = thetaDeg*CONVERT_TO_RADIANS;
-      float phi = phiDeg*CONVERT_TO_RADIANS;
-      float nextPhi = (phiDeg + 5) * CONVERT_TO_RADIANS;
+      float nextTheta = (thetaDeg+20)*CONVERT_TO_RADIANS;
 
-      vertices[vertexCount].x = sin(phi)*cos(theta);
-      vertices[vertexCount].y = cos(phi)*cos(theta);
+      vertices[vertexCount].x = cos(phi)*cos(theta);
+      vertices[vertexCount].y = cos(phi)*sin(theta);
       vertices[vertexCount].z = sin(phi);
       vertices[vertexCount].w = 1;
 
       vertexCount++;
 
-      vertices[vertexCount].x = sin(nextPhi*CONVERT_TO_RADIANS)*cos(theta*CONVERT_TO_RADIANS);
+      vertices[vertexCount].x = sin(nextPhi)*cos(theta);
       vertices[vertexCount].y = sin(nextPhi)*sin(theta);
       vertices[vertexCount].z = sin(nextPhi);
       vertices[vertexCount].w = 1;
 
       vertexCount++;
 
+      vertices[vertexCount].x = sin(nextPhi)*cos(nextTheta);
+      vertices[vertexCount].y = sin(nextPhi)*sin(nextTheta);
+      vertices[vertexCount].z = sin(nextPhi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = cos(phi)*cos(theta);
+      vertices[vertexCount].y = cos(phi)*sin(theta);
+      vertices[vertexCount].z = sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = sin(nextPhi)*cos(nextTheta);
+      vertices[vertexCount].y = sin(nextPhi)*sin(nextTheta);
+      vertices[vertexCount].z = sin(nextPhi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = sin(phi)*cos(nextTheta);
+      vertices[vertexCount].y = sin(phi)*sin(nextTheta);
+      vertices[vertexCount].z = sin(phi);
+      vertices[vertexCount].w = 1;
+
       }
     }
-  printf("NumVertices: %d\n", vertexCount);
+    printf("%d\n", vertexCount);
 }
 
 void genColors()
