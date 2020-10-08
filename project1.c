@@ -20,13 +20,13 @@
 void genVertices();
 void genColors();
 
-vec4 vertices[3888];
-vec4 colors[3888];
+vec4 vertices[7776];
+vec4 colors[7776];
 
 //1 triangle every 5 degrees makes a smooth looking circle = 360/5 triangles = 72 triangles
 //2*72 for the top part of the cone = 144
 //144 triangles * 3 vertices per triangle = 432
-int num_vertices = 3888;
+int num_vertices = 7776;
 int vertexCount = 0;
 
 float degrees = 0;
@@ -35,6 +35,10 @@ GLuint ctm_location;
 mat4 ctm = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
 mat4 currentScale = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
 mat4 rot = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
+mat4 prevRot = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
+
+vec4 currentPoint = {0, 0, 0, 1};
+vec4 lastPoint = {0, 0, 0, 1};
 
 float scalingFactor = 1.0;
 
@@ -144,7 +148,63 @@ void genSphere()
 
       }
     }
-    printf("%d\n", vertexCount);
+}
+
+void genTorus()
+{
+  for(float phiDeg = 0; phiDeg < 360; phiDeg+=10)
+  {
+    float phi = phiDeg*CONVERT_TO_RADIANS;
+    float nextPhi = (phiDeg + 10) * CONVERT_TO_RADIANS;
+    for(float thetaDeg=0; thetaDeg<360; thetaDeg+=10)
+    {
+      float theta = thetaDeg*CONVERT_TO_RADIANS;
+      float nextTheta = (thetaDeg+10)*CONVERT_TO_RADIANS;
+
+      vertices[vertexCount].x = (0.70 + 0.370*cos(nextPhi))*cos(nextTheta);
+      vertices[vertexCount].y = (0.70 + 0.370*cos(nextPhi))*sin(nextTheta);
+      vertices[vertexCount].z = 0.370*sin(nextPhi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = (0.70 + 0.370*cos(nextPhi))*cos(theta);
+      vertices[vertexCount].y = (0.70 + 0.370*cos(nextPhi))*sin(theta);
+      vertices[vertexCount].z = 0.370*sin(nextPhi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = (0.70 + 0.370*cos(phi))*cos(theta);
+      vertices[vertexCount].y = (0.70 + 0.370*cos(phi))*sin(theta);
+      vertices[vertexCount].z = 0.370*sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = (0.70 + 0.370*cos(phi))*cos(theta);
+      vertices[vertexCount].y = (0.70 + 0.370*cos(phi))*sin(theta);
+      vertices[vertexCount].z = 0.375*sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = (0.70 + 0.370*cos(phi))*cos(nextTheta);
+      vertices[vertexCount].y = (0.70 + 0.370*cos(phi))*sin(nextTheta);
+      vertices[vertexCount].z = 0.375*sin(phi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      vertices[vertexCount].x = (0.70 + 0.370*cos(nextPhi))*cos(nextTheta);
+      vertices[vertexCount].y = (0.70 + 0.370*cos(nextPhi))*sin(nextTheta);
+      vertices[vertexCount].z = 0.370*sin(nextPhi);
+      vertices[vertexCount].w = 1;
+
+      vertexCount++;
+
+      }
+    }
 }
 
 void genColors()
@@ -193,6 +253,13 @@ void motion(int x, int y)
 
   vec4 v = {-gly, glx, 1-pow(gly,2)-pow(glx,2), 0};
 
+
+  currentPoint.x = v.x;
+  currentPoint.y = v.y;
+  currentPoint.z = v.z;
+  currentPoint.w = 1;
+
+
   if(v.z > 0)
   {
     v = vec4_norm(v);
@@ -209,12 +276,21 @@ void motion(int x, int y)
     mat4 rynegativety = {{costy, 0, sinty, 0}, {0, 1, 0, 0}, {-sinty, 0, costy, 0}, {0, 0, 0, 1}};
     mat4 ryty = mat4_trans(rynegativety);
 
+    //angle
+    float angle = acos(vec4_dot(lastPoint, currentPoint)/(vec4_mag(currentPoint)*vec4_mag(lastPoint)));
 
     mat4 M1 = mat4_mult(rynegativety, rxtx);
-    mat4 M2 = mat4_mult(mat4_rotate_z(45*CONVERT_TO_RADIANS), M1);
+    mat4 M2 = mat4_mult(mat4_rotate_z(50*CONVERT_TO_RADIANS), M1);
     mat4 M3 = mat4_mult(ryty, M2);
     rot = mat4_mult(rxnegativetx, M3);
-    ctm = mat4_mult(rot, currentScale);
+    ctm = mat4_mult(currentScale, rot);
+
+
+    lastPoint.x = currentPoint.x;
+    lastPoint.y = currentPoint.y;
+    lastPoint.z = currentPoint.z;
+    lastPoint.w = 1;
+
   }
 
   glutPostRedisplay();
@@ -227,7 +303,7 @@ void idle()
 
 int main(int argc, char **argv)
 {
-    genSphere();
+    genTorus();
     genColors();
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
