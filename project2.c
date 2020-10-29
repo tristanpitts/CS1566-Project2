@@ -9,7 +9,9 @@
 #include <GL/freeglut.h>
 #include <GL/freeglut_ext.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 #include "initShader.h"
 #include "mylib.h"
@@ -38,6 +40,7 @@ typedef struct
 } cell;
 
 cell walls[8][8];
+int visited[8][8];
 
 void init(void)
 {
@@ -99,15 +102,181 @@ void idle()
   glutPostRedisplay();
 }
 
+int allNeighborsVisited(int row, int col)
+{
+  //check neighbor to south
+  if(row+1 <= 7)
+  {
+    if(visited[row+1][col] != 1)
+      return 0;
+  }
+  if(row-1 >= 0)
+  {
+    if(visited[row-1][col] != 1)
+      return 0;
+  }
+  if(col+1 <= 7)
+  {
+    if(visited[row][col+1] != 1)
+      return 0;
+  }
+  if(col-1 >= 0)
+  {
+    if(visited[row][col-1] != 1)
+      return 0;
+  }
+
+  return 1;
+}
+
+int generateMaze(int row, int col)
+{
+  visited[row][col] = 1;
+  int nrow = row;
+  int ncol = col;
+  int good = 0;
+
+  if(allNeighborsVisited(row, col) == 1)
+    return -1;
+
+  do
+  {
+    switch(rand() % 4)
+    {
+      //0=south, 1=east, 2=north, 3=west
+      case 0:
+        nrow = row+1;
+        ncol = col;
+        if(nrow < 8 && visited[nrow][ncol]==0)
+        {
+          //printf("I'm going south\n");
+          walls[row][col].south = 0;
+          walls[nrow][ncol].north = 0;
+          good = 1;
+        }
+        break;
+
+      case 1:
+        nrow = row;
+        ncol = col + 1;
+        if(ncol < 8 && visited[nrow][ncol] == 0)
+        {
+          //printf("I'm going east\n");
+          walls[row][col].east = 0;
+          walls[nrow][ncol].west = 0;
+          good = 1;
+        }
+        break;
+
+      case 2:
+        nrow = row-1;
+        ncol = col;
+        if(nrow >=0 && visited[nrow][ncol] == 0)
+        {
+          //printf("I'm going north\n");
+          walls[row][col].north = 0;
+          walls[nrow][ncol].south = 0;
+          good = 1;
+        }
+        break;
+
+      case 3:
+        nrow = row;
+        ncol = col - 1;
+        if(ncol >= 0 && visited[nrow][ncol] == 0)
+        {
+          //printf("I'm going west\n");
+          walls[row][col].west = 0;
+          walls[nrow][ncol].east = 0;
+          good = 1;
+        }
+        break;
+    }
+  }while(good == 0);
+
+  if(generateMaze(nrow, ncol) == -1 && !allNeighborsVisited(row, col))
+    generateMaze(row, col);
+  else if(allNeighborsVisited(row, col))
+    return -1;
+
+  return 0;
+}
+
+void fillArrays()
+{
+  for(int i = 0; i<8; i++)
+    for(int j = 0; j<8; j++)
+    {
+      walls[i][j].north = 1;
+      walls[i][j].south = 1;
+      walls[i][j].east = 1;
+      walls[i][j].west = 1;
+      visited[i][j] = 0;
+    }
+}
+
+void printMaze()
+{
+  printf("▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n");
+  for(int i = 0; i<8; i++)
+  {
+    for(int j=0; j<8; j++)
+    {
+      if(j == 0)
+      {
+        if(i!=0)
+          printf("│");
+        else
+          printf(" ");
+        if(walls[i][j].south == 1)
+          printf("▁");
+        else
+          printf(" ");
+      }
+      else if(j == 7)
+      {
+        if(walls[i][j].south == 1)
+          printf("▁");
+        else
+          printf(" ");
+        if(i == 7)
+          printf(" ");
+        else
+          printf("│");
+      }
+      else
+      {
+        if(walls[i][j].west == 1)
+          printf("│");
+        else
+          printf("▁");
+        if(walls[i][j].south == 1)
+          printf("▁");
+        else
+          printf(" ");
+      }
+
+    }
+    printf("\n");
+  }
+}
+
 int main(int argc, char **argv)
 {
+    fillArrays();
+    time_t t;
+    srand((unsigned) time(&t));
+    generateMaze(rand()%8, rand()%8);
+    walls[0][0].west = 0;
+    walls[7][7].east = 0;
+    printMaze();
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(512, 512);
     glutInitWindowPosition(100,100);
     glutCreateWindow("Project 2");
     glewInit();
-    init();float degrees = 0;
+    init();
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
     glutReshapeFunc(reshape);
